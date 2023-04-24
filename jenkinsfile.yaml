@@ -1,0 +1,48 @@
+pipeline {
+    
+     environment {
+        dockerRun = ''
+    }
+
+    agent any
+
+    stages {
+        stage('Build') {
+            steps {
+                // Get some code from a GitHub repository
+                git branch: 'angular', url: 'https://github.com/sruthymanohar/angular.git'
+                // Change file permisson
+                sh ' docker build -t armia123/angular:latest .'
+                
+            }
+        }
+ 
+         stage('Publish image to Docker Hub'){
+            
+            steps {
+        withDockerRegistry([ credentialsId: "dockerhub", url: "" ])
+        {
+          sh  'docker push armia123/angular:latest'
+       
+        }
+        }
+    }
+    
+   stage('docker container') {
+      steps {
+        script {
+          def dockerRun = "docker container run -itd -p 80:80 --name webserver armia123/angular:latest"
+          sshagent(['ssh-dev']) {
+            sh """
+              ssh -o StrictHostKeyChecking=no ubuntu@3.108.41.84 '
+                ${dockerRun}
+                # Run additional commands here
+              '
+            """
+          }
+        }
+      }
+    }
+    
+    }
+}
