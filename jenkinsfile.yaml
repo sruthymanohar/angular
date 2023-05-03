@@ -1,9 +1,6 @@
 pipeline {
     
-     environment {
-        dockerRun = ''
-    }
-
+   
     agent any
 
     stages {
